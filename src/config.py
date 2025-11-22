@@ -14,45 +14,34 @@ MIN_DETECTION_CONFIDENCE = 0.5
 MIN_TRACKING_CONFIDENCE = 0.5
 
 # Configurazione Zone Batteria Virtuale
-# I pad sono disposti in COLONNA VERTICALE basandosi sull'ALTEZZA (Y)
-# X = 0.5 (centro), Y varia da ALTO (0.15) a BASSO (0.95)
-# Ogni pad ha un range di altezza per il trigger
+# Configurazione per batterista SEDUTO:
+# - Snare a DESTRA (mano destra) - INVERTITO
+# - Hi-Hat a SINISTRA (mano sinistra) - INVERTITO
+# - Kick con ginocchio/gamba
 DRUM_ZONES = {
-    'crash': {
-        'center': np.array([0.5, 0.15, 0.0]),  # ALTO - Crash
-        'radius': 0.10,
-        'trigger_distance': 0.15,
-        'height_range': (0.0, 0.25)  # Range altezza Y per trigger (solo Y, ignora X)
-    },
-    'hihat': {
-        'center': np.array([0.5, 0.30, 0.0]),  # ALTO-MEDIO - Hi-Hat
-        'radius': 0.10,
-        'trigger_distance': 0.15,
-        'height_range': (0.20, 0.40)
-    },
-    'tom2': {
-        'center': np.array([0.5, 0.50, 0.0]),  # MEDIO - Tom Alto
-        'radius': 0.10,
-        'trigger_distance': 0.15,
-        'height_range': (0.40, 0.60)
-    },
     'snare': {
-        'center': np.array([0.5, 0.70, 0.0]),  # MEDIO-BASSO - Snare
+        'center': np.array([0.75, 0.5, 0.0]),  # DESTRA - Snare (Rullante)
         'radius': 0.12,
         'trigger_distance': 0.18,
-        'height_range': (0.60, 0.80)
+        'position_type': 'horizontal',  # Usa posizione X (sinistra/destra)
+        'x_range': (0.64, 0.86),  # Range X per trigger (destra) - INGRANDITO 5% (da 0.65-0.85)
+        'y_range': (0.33, 0.67)   # Range Y (altezza media) - INGRANDITO 5% (da 0.35-0.65)
     },
-    'tom1': {
-        'center': np.array([0.5, 0.85, 0.0]),  # BASSO - Tom Basso
-        'radius': 0.10,
-        'trigger_distance': 0.15,
-        'height_range': (0.75, 0.95)
+    'hihat': {
+        'center': np.array([0.25, 0.5, 0.0]),  # SINISTRA - Hi-Hat
+        'radius': 0.12,
+        'trigger_distance': 0.18,
+        'position_type': 'horizontal',  # Usa posizione X (sinistra/destra)
+        'x_range': (0.14, 0.36),  # Range X per trigger (sinistra) - INGRANDITO 5% (da 0.15-0.35)
+        'y_range': (0.33, 0.67)   # Range Y (altezza media) - INGRANDITO 5% (da 0.35-0.65)
     },
     'kick': {
-        'center': np.array([0.5, 0.95, 0.0]),  # MOLTO BASSO - Kick (piedi)
+        'center': np.array([0.5, 0.85, 0.0]),  # BASSO CENTRO - Kick (ginocchio/gamba)
         'radius': 0.15,
         'trigger_distance': 0.2,
-        'height_range': (0.85, 1.0)  # Solo per piedi/caviglie
+        'position_type': 'knee',  # Usa ginocchio/gamba
+        'x_range': (0.28, 0.72),    # Range X (centro) - INGRANDITO 5% (da 0.3-0.7)
+        'y_range': (0.665, 1.0)     # Range Y (basso) - INGRANDITO 5% (da 0.7-1.0)
     }
 }
 
@@ -78,7 +67,7 @@ COLORS = {
 }
 
 # Sensibilità
-VELOCITY_THRESHOLD = 0.3  # Velocità minima per triggerare un colpo
+VELOCITY_THRESHOLD = 0.2  # Velocità minima per triggerare un colpo (ridotta per migliorare sensibilità)
 COOLDOWN_TIME = 0.1  # Secondi tra un colpo e l'altro (per evitare doppi trigger)
 
 # Configurazione Reaper

@@ -28,7 +28,10 @@ class ZoneDetector:
     def is_point_in_zone(self, point: np.ndarray, zone_config: Dict) -> bool:
         """
         Verifica se un punto è all'interno della zona di trigger
-        Per i pad in colonna, controlla solo l'altezza (Y), ignora X
+        Supporta diversi tipi di rilevamento:
+        - horizontal: usa X (sinistra/destra) e Y (altezza)
+        - knee: usa ginocchio/gamba (X e Y)
+        - height_range: solo altezza Y (retrocompatibilità)
         
         Args:
             point: Punto 3D normalizzato [x, y, z]
@@ -37,21 +40,43 @@ class ZoneDetector:
         Returns:
             True se il punto è nella zona
         """
-        # Se c'è un height_range, usa solo l'altezza Y (ignora X)
-        if 'height_range' in zone_config:
+        position_type = zone_config.get('position_type', 'height_range')
+        
+        # Rilevamento orizzontale (sinistra/destra) per hi-hat e snare
+        if position_type == 'horizontal':
+            if 'x_range' in zone_config and 'y_range' in zone_config:
+                x_min, x_max = zone_config['x_range']
+                y_min, y_max = zone_config['y_range']
+                x = point[0]  # Coordinata X normalizzata (0-1)
+                y = point[1]  # Coordinata Y normalizzata (0-1)
+                return (x_min <= x <= x_max) and (y_min <= y <= y_max)
+        
+        # Rilevamento ginocchio/gamba per kick
+        elif position_type == 'knee':
+            if 'x_range' in zone_config and 'y_range' in zone_config:
+                x_min, x_max = zone_config['x_range']
+                y_min, y_max = zone_config['y_range']
+                x = point[0]
+                y = point[1]
+                return (x_min <= x <= x_max) and (y_min <= y <= y_max)
+        
+        # Retrocompatibilità: solo altezza Y
+        elif 'height_range' in zone_config:
             y_min, y_max = zone_config['height_range']
-            y = point[1]  # Coordinata Y normalizzata (0-1)
-            # Controlla solo se Y è nel range, X può essere ovunque
+            y = point[1]
             return y_min <= y <= y_max
         
-        # Fallback: distanza euclidea tradizionale (per retrocompatibilità)
+        # Fallback: distanza euclidea tradizionale
         distance = self.distance_to_zone(point, zone_config['center'])
         return distance <= zone_config['trigger_distance']
     
     def detect_hits(self, key_points: Dict, velocities: Dict) -> Set[str]:
         """
         Rileva quali zone sono state colpite
-        Basato sull'ALTEZZA delle mani (coordinata Y)
+        Configurazione per batterista SEDUTO:
+        - Hi-Hat a DESTRA (mano destra)
+        - Snare a SINISTRA (mano sinistra)
+        - Kick con ginocchio/gamba
         
         Args:
             key_points: Punti chiave dell'utente (coordinate normalizzate)
@@ -62,39 +87,46 @@ class ZoneDetector:
         """
         hit_zones = set()
         
-        # Controlla i polsi (mani) per i colpi - basato su ALTEZZA
-        for hand in ['left_wrist', 'right_wrist']:
-            if hand not in key_points:
-                continue
+        # Controlla mano DESTRA per Snare (INVERTITO)
+        if 'right_wrist' in key_points:
+            point = key_points['right_wrist']
+            velocity = velocities.get('right_wrist', 0.0)
             
-            point = key_points[hand]
-            velocity = velocities.get(hand, 0.0)
-            
-            # Verifica se la velocità è sufficiente per un colpo
-            if velocity < self.velocity_threshold:
-                continue
-            
-            # Controlla tutte le zone (escluso kick che è per i piedi)
-            for zone_name, zone_config in self.drum_zones.items():
-                if zone_name == 'kick':
-                    continue  # Skip kick per le mani
-                
-                if self.is_point_in_zone(point, zone_config):
-                    hit_zones.add(zone_name)
-                    break  # Una mano può colpire solo una zona alla volta
-        
-        # Controlla i piedi (caviglie) per il kick - solo altezza
-        for foot in ['left_ankle', 'right_ankle']:
-            if foot not in key_points:
-                continue
-            
-            point = key_points[foot]
-            velocity = velocities.get(foot, 0.0)
-            
-            # Per il kick, controlla solo la zona kick (basato su altezza)
             if velocity >= self.velocity_threshold:
-                if self.is_point_in_zone(point, self.drum_zones['kick']):
-                    hit_zones.add('kick')
+                if 'snare' in self.drum_zones and self.is_point_in_zone(point, self.drum_zones['snare']):
+                    hit_zones.add('snare')
+        
+        # Controlla mano SINISTRA per Hi-Hat (INVERTITO)
+        if 'left_wrist' in key_points:
+            point = key_points['left_wrist']
+            velocity = velocities.get('left_wrist', 0.0)
+            
+            if velocity >= self.velocity_threshold:
+                if 'hihat' in self.drum_zones and self.is_point_in_zone(point, self.drum_zones['hihat']):
+                    hit_zones.add('hihat')
+        
+        # Controlla GINOCCHIA/GAMBE per Kick
+        for knee in ['left_knee', 'right_knee']:
+            if knee in key_points:
+                point = key_points[knee]
+                velocity = velocities.get(knee, 0.0)
+                
+                if velocity >= self.velocity_threshold:
+                    if 'kick' in self.drum_zones and self.is_point_in_zone(point, self.drum_zones['kick']):
+                        hit_zones.add('kick')
+                        break  # Un ginocchio alla volta
+        
+        # Fallback: usa anche caviglie se ginocchia non disponibili
+        if 'kick' not in hit_zones:
+            for ankle in ['left_ankle', 'right_ankle']:
+                if ankle in key_points:
+                    point = key_points[ankle]
+                    velocity = velocities.get(ankle, 0.0)
+                    
+                    if velocity >= self.velocity_threshold:
+                        if 'kick' in self.drum_zones and self.is_point_in_zone(point, self.drum_zones['kick']):
+                            hit_zones.add('kick')
+                            break
         
         return hit_zones
     

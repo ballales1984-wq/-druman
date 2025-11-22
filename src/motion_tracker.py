@@ -98,6 +98,16 @@ class MotionTracker:
                 landmarks[self.mp_pose.PoseLandmark.RIGHT_WRIST].y,
                 landmarks[self.mp_pose.PoseLandmark.RIGHT_WRIST].z
             ]),
+            'left_knee': np.array([
+                landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE].x,
+                landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE].y,
+                landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE].z
+            ]),
+            'right_knee': np.array([
+                landmarks[self.mp_pose.PoseLandmark.RIGHT_KNEE].x,
+                landmarks[self.mp_pose.PoseLandmark.RIGHT_KNEE].y,
+                landmarks[self.mp_pose.PoseLandmark.RIGHT_KNEE].z
+            ]),
             'left_ankle': np.array([
                 landmarks[self.mp_pose.PoseLandmark.LEFT_ANKLE].x,
                 landmarks[self.mp_pose.PoseLandmark.LEFT_ANKLE].y,

@@ -130,7 +130,7 @@ class VideoOverlay:
             intensity_text = self.font_small.render(f"{int(intensity * 100)}%", True, (255, 255, 0))
             self.screen.blit(intensity_text, (x + w - 40, y + h - 20))
     
-    def draw_all_pads(self, keypoints: Optional[Dict] = None):
+    def draw_all_pads(self, keypoints: Optional[Dict] = None, pad_positions: Optional[Dict] = None):
         """
         Disegna tutti i pad basandosi sulle zone configurate
         I pad sono disposti in colonna verticale al centro
@@ -138,41 +138,53 @@ class VideoOverlay:
         Args:
             keypoints: Keypoints MediaPipe (opzionale, per posizionamento dinamico)
         """
-        # Mappa zone normalizzate a posizioni video
-        # I pad sono in colonna verticale al centro (X = 0.5)
-        center_x = self.camera_width // 2  # Centro orizzontale
+        # Usa posizioni dinamiche se disponibili, altrimenti usa config
+        zones_to_use = pad_positions if pad_positions else DRUM_ZONES
         
-        for drum_name, zone_config in DRUM_ZONES.items():
+        for drum_name, zone_config in zones_to_use.items():
             center = zone_config['center']
             radius = zone_config['radius']
             
             # Converti coordinate normalizzate (0-1) a pixel video
-            # X è sempre al centro, Y varia dall'alto al basso
-            x = center_x
+            x = int(center[0] * self.camera_width)
             y = int(center[1] * self.camera_height)
             
-            # Dimensione pad rettangolare verticale
-            # Larghezza fissa (25% della larghezza video)
-            pad_width = int(self.camera_width * 0.25)
+            # Dimensioni pad basate sul tipo
+            if drum_name == 'snare':
+                # Snare a DESTRA (INVERTITO) - pad circolare/quadrato
+                pad_size = int(self.camera_width * 0.15)
+                if 'x_range' in zone_config and 'y_range' in zone_config:
+                    x_min, x_max = zone_config['x_range']
+                    y_min, y_max = zone_config['y_range']
+                    x = int(((x_min + x_max) / 2) * self.camera_width)
+                    y = int(((y_min + y_max) / 2) * self.camera_height)
+                self.draw_pad_overlay(drum_name, (x - pad_size // 2, y - pad_size // 2), (pad_size, pad_size))
             
-            # Altezza basata su height_range se disponibile, altrimenti radius
-            if 'height_range' in zone_config:
-                y_min, y_max = zone_config['height_range']
-                pad_height = int((y_max - y_min) * self.camera_height)
-                # Centra il pad nel range
-                y_center = int(((y_min + y_max) / 2) * self.camera_height)
-                y = y_center - pad_height // 2
+            elif drum_name == 'hihat':
+                # Hi-Hat a SINISTRA (INVERTITO) - pad circolare/quadrato
+                pad_size = int(self.camera_width * 0.15)
+                if 'x_range' in zone_config and 'y_range' in zone_config:
+                    x_min, x_max = zone_config['x_range']
+                    y_min, y_max = zone_config['y_range']
+                    x = int(((x_min + x_max) / 2) * self.camera_width)
+                    y = int(((y_min + y_max) / 2) * self.camera_height)
+                self.draw_pad_overlay(drum_name, (x - pad_size // 2, y - pad_size // 2), (pad_size, pad_size))
+            
+            elif drum_name == 'kick':
+                # Kick in BASSO CENTRO - pad rettangolare orizzontale
+                pad_width = int(self.camera_width * 0.25)
+                pad_height = int(self.camera_height * 0.15)
+                if 'x_range' in zone_config and 'y_range' in zone_config:
+                    x_min, x_max = zone_config['x_range']
+                    y_min, y_max = zone_config['y_range']
+                    x = int(((x_min + x_max) / 2) * self.camera_width)
+                    y = int(((y_min + y_max) / 2) * self.camera_height)
+                self.draw_pad_overlay(drum_name, (x - pad_width // 2, y - pad_height // 2), (pad_width, pad_height))
+            
             else:
-                # Fallback: usa radius
-                pad_height = int(self.camera_height * radius * 2)
-                y = y - pad_height // 2
-            
-            # Disegna pad rettangolare verticale
-            self.draw_pad_overlay(
-                drum_name,
-                (x - pad_width // 2, y),
-                (pad_width, pad_height)
-            )
+                # Fallback per altri pad
+                pad_size = int(self.camera_width * 0.12)
+                self.draw_pad_overlay(drum_name, (x - pad_size // 2, y - pad_size // 2), (pad_size, pad_size))
     
     def draw_info(self, fps: float, active_count: int):
         """
