@@ -1,0 +1,45 @@
+========================================
+ISTRUZIONI RAPIDE - DrumMan
+========================================
+
+IMPORTANTE: Devi essere nella directory del progetto!
+
+1. APRI TERMINALE e vai nella directory:
+   cd C:\Users\user\tesi\druman
+
+2. VERIFICA che Python 3.11 sia installato:
+   python3.11 --version
+   
+   Se non funziona, prova:
+   py -3.11 --version
+
+3. Se Python 3.11 NON è installato:
+   - Vai su: https://www.python.org/downloads/release/python-3110/
+   - Scarica "Windows installer (64-bit)"
+   - Durante installazione: SELEZIONA "Add Python 3.11 to PATH"
+   - Installa e CHIUDI/RIAPRI il terminale
+
+4. Esegui setup:
+   setup_python311_fix.bat
+
+5. Dopo installazione, per usare:
+   venv311\Scripts\activate
+   python main.py
+
+========================================
+PROBLEMI COMUNI
+========================================
+
+"python3.11 non riconosciuto"
+  -> Installa Python 3.11 e seleziona "Add to PATH"
+  -> Oppure usa: py -3.11
+
+"requirements.txt non trovato"
+  -> Sei nella directory sbagliata!
+  -> Esegui: cd C:\Users\user\tesi\druman
+
+"venv311 non trovato"
+  -> Esegui prima: setup_python311_fix.bat
+
+========================================
+

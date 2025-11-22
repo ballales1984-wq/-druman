@@ -1,0 +1,149 @@
+{
+  "samples": {
+    "crash": {
+      "name": "crash",
+      "file_path": "sounds\\kits\\synthesized\\crash.wav",
+      "parameters": {
+        "volume": 1.0,
+        "pitch": 1.0,
+        "speed": 1.0,
+        "attack": 0.0,
+        "decay": 1.0,
+        "sustain": 1.0,
+        "release": 0.0,
+        "lowpass_freq": 20000,
+        "highpass_freq": 0,
+        "reverb": 0.0,
+        "distortion": 0.0,
+        "pan": 0.0
+      },
+      "metadata": {
+        "created": 1763821896.1278212,
+        "modified": 1763821896.1278224,
+        "duration": 0.8,
+        "channels": 1
+      }
+    },
+    "hihat": {
+      "name": "hihat",
+      "file_path": "sounds\\kits\\synthesized\\hihat.wav",
+      "parameters": {
+        "volume": 1.0,
+        "pitch": 1.0,
+        "speed": 1.0,
+        "attack": 0.0,
+        "decay": 1.0,
+        "sustain": 1.0,
+        "release": 0.0,
+        "lowpass_freq": 20000,
+        "highpass_freq": 0,
+        "reverb": 0.0,
+        "distortion": 0.0,
+        "pan": 0.0
+      },
+      "metadata": {
+        "created": 1763821896.1512716,
+        "modified": 1763821896.151274,
+        "duration": 0.12,
+        "channels": 1
+      }
+    },
+    "kick": {
+      "name": "kick",
+      "file_path": "sounds\\kits\\synthesized\\kick.wav",
+      "parameters": {
+        "volume": 1.0,
+        "pitch": 1.0,
+        "speed": 1.0,
+        "attack": 0.0,
+        "decay": 1.0,
+        "sustain": 1.0,
+        "release": 0.0,
+        "lowpass_freq": 20000,
+        "highpass_freq": 0,
+        "reverb": 0.0,
+        "distortion": 0.0,
+        "pan": 0.0
+      },
+      "metadata": {
+        "created": 1763821896.1748445,
+        "modified": 1763821896.1748452,
+        "duration": 0.4,
+        "channels": 1
+      }
+    },
+    "snare": {
+      "name": "snare",
+      "file_path": "sounds\\kits\\synthesized\\snare.wav",
+      "parameters": {
+        "volume": 1.0,
+        "pitch": 1.0,
+        "speed": 1.0,
+        "attack": 0.0,
+        "decay": 1.0,
+        "sustain": 1.0,
+        "release": 0.0,
+        "lowpass_freq": 20000,
+        "highpass_freq": 0,
+        "reverb": 0.0,
+        "distortion": 0.0,
+        "pan": 0.0
+      },
+      "metadata": {
+        "created": 1763821896.1923347,
+        "modified": 1763821896.1923354,
+        "duration": 0.25,
+        "channels": 1
+      }
+    },
+    "tom1": {
+      "name": "tom1",
+      "file_path": "sounds\\kits\\synthesized\\tom1.wav",
+      "parameters": {
+        "volume": 1.0,
+        "pitch": 1.0,
+        "speed": 1.0,
+        "attack": 0.0,
+        "decay": 1.0,
+        "sustain": 1.0,
+        "release": 0.0,
+        "lowpass_freq": 20000,
+        "highpass_freq": 0,
+        "reverb": 0.0,
+        "distortion": 0.0,
+        "pan": 0.0
+      },
+      "metadata": {
+        "created": 1763821896.2146502,
+        "modified": 1763821896.2146506,
+        "duration": 0.3,
+        "channels": 1
+      }
+    },
+    "tom2": {
+      "name": "tom2",
+      "file_path": "sounds\\kits\\synthesized\\tom2.wav",
+      "parameters": {
+        "volume": 1.0,
+        "pitch": 1.0,
+        "speed": 1.0,
+        "attack": 0.0,
+        "decay": 1.0,
+        "sustain": 1.0,
+        "release": 0.0,
+        "lowpass_freq": 20000,
+        "highpass_freq": 0,
+        "reverb": 0.0,
+        "distortion": 0.0,
+        "pan": 0.0
+      },
+      "metadata": {
+        "created": 1763821896.233615,
+        "modified": 1763821896.2336159,
+        "duration": 0.3,
+        "channels": 1
+      }
+    }
+  },
+  "presets": {}
+}

@@ -135,6 +135,9 @@ python test_components.py
 
 ## 🎮 Utilizzo
 
+> **📖 Per una guida completa passo-passo, vedi [GUIDA_USO.md](GUIDA_USO.md)**  
+> **⚡ Per iniziare subito, vedi [START_HERE.md](START_HERE.md)**
+
 ### Avvio Base
 
 ```bash

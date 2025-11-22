@@ -8,20 +8,32 @@ from typing import Dict, Optional, List, Tuple
 from scipy import signal
 from collections import deque
 
+# Import condizionale per SoundLibrary
+try:
+    from src.sound_library import SoundLibrary
+    SOUND_LIBRARY_AVAILABLE = True
+except ImportError:
+    SOUND_LIBRARY_AVAILABLE = False
+    SoundLibrary = None
+
 class DrumMachine:
     """Classe per generare suoni di batteria avanzata"""
     
-    def __init__(self, sample_rate: int = 44100, master_volume: float = 0.7):
+    def __init__(self, sample_rate: int = 44100, master_volume: float = 0.7, 
+                 use_sound_library: bool = False, library_path: str = "sounds"):
         """
         Inizializza la drum machine
         
         Args:
             sample_rate: Frequenza di campionamento audio
             master_volume: Volume master (0-1)
+            use_sound_library: Se usare la libreria di suoni invece di sintesi
+            library_path: Percorso libreria suoni
         """
         self.sample_rate = sample_rate
         self.channels = 2  # Stereo
         self.master_volume = master_volume
+        self.use_sound_library = use_sound_library
         
         # Inizializza Pygame mixer
         pygame.mixer.init(frequency=sample_rate, size=-16, channels=self.channels, buffer=512)
@@ -41,8 +53,21 @@ class DrumMachine:
             'tom2': 0.75
         }
         
-        # Genera i suoni base
-        self.sounds = self._generate_drum_sounds()
+        # Libreria suoni (opzionale)
+        self.sound_library = None
+        if use_sound_library and SOUND_LIBRARY_AVAILABLE:
+            try:
+                self.sound_library = SoundLibrary(library_path)
+                print("[OK] Libreria suoni caricata")
+            except Exception as e:
+                print(f"[WARN] Errore caricamento libreria: {e}")
+                self.use_sound_library = False
+        
+        # Genera i suoni base (se non usando libreria)
+        if not self.use_sound_library:
+            self.sounds = self._generate_drum_sounds()
+        else:
+            self.sounds = {}  # Sarà popolato dalla libreria
         
         # Sistema di registrazione pattern
         self.recording = False
@@ -252,10 +277,24 @@ class DrumMachine:
         Returns:
             True se il suono è stato riprodotto, False altrimenti
         """
-        if drum_name not in self.sounds:
+        if not self._can_play(drum_name):
             return False
         
-        if not self._can_play(drum_name):
+        # Ottieni audio (da libreria o sintesi)
+        sound_array = None
+        
+        if self.use_sound_library and self.sound_library:
+            # Usa libreria suoni
+            audio = self.sound_library.get_audio(drum_name, apply_mods=True)
+            if audio is not None and len(audio) > 0:
+                sound_array = audio.copy()
+        else:
+            # Usa sintesi
+            if drum_name not in self.sounds:
+                return False
+            sound_array = self.sounds[drum_name].copy()
+        
+        if sound_array is None or len(sound_array) == 0:
             return False
         
         # Applica la velocità al volume con curva non lineare per suono più naturale
@@ -265,7 +304,7 @@ class DrumMachine:
         # Volume totale = master * componente * velocity
         volume = self.master_volume * self.volumes.get(drum_name, 1.0) * velocity_curve
         
-        sound_array = self.sounds[drum_name].copy() * volume
+        sound_array = sound_array * volume
         
         # Converti in formato stereo
         if len(sound_array.shape) == 1:

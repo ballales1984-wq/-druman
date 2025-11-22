@@ -12,12 +12,19 @@ import numpy as np
 from src.motion_tracker import MotionTracker
 from src.drum_machine import DrumMachine
 from src.virtual_environment import VirtualEnvironment
+from src.video_overlay import VideoOverlay
+from src.beatbox_detector import BeatboxDetector
 from src.zone_detector import ZoneDetector
 from src.calibration import CalibrationSystem
 from src.ui_menu import UIMenu
+from src.reaper_connector import ReaperConnector, ConnectionType
 from src.config import (
     CAMERA_INDEX, CAMERA_WIDTH, CAMERA_HEIGHT,
-    WINDOW_WIDTH, WINDOW_HEIGHT
+    WINDOW_WIDTH, WINDOW_HEIGHT,
+    REAPER_ENABLED, REAPER_CONNECTION_TYPE, REAPER_MIDI_PORT,
+    REAPER_OSC_HOST, REAPER_OSC_PORT,
+    USE_SOUND_LIBRARY, SOUND_LIBRARY_PATH,
+    USE_VIDEO_OVERLAY, BEATBOX_MODE
 )
 
 def main():
@@ -35,14 +42,73 @@ def main():
         height=CAMERA_HEIGHT
     )
     
-    drum_machine = DrumMachine()
-    virtual_env = VirtualEnvironment(
-        width=WINDOW_WIDTH,
-        height=WINDOW_HEIGHT
+    drum_machine = DrumMachine(
+        use_sound_library=USE_SOUND_LIBRARY,
+        library_path=SOUND_LIBRARY_PATH
     )
+    
+    # Inizializza visualizzazione (video overlay o 3D)
+    if USE_VIDEO_OVERLAY:
+        # Usa video overlay (video live con rettangoli verdi)
+        pygame.init()
+        screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+        pygame.display.set_caption("DrumMan - Video Overlay Mode")
+        video_overlay = VideoOverlay(screen, CAMERA_WIDTH, CAMERA_HEIGHT)
+        virtual_env = None  # Non usato in modalità video
+    else:
+        # Usa ambiente 3D tradizionale
+        virtual_env = VirtualEnvironment(
+            width=WINDOW_WIDTH,
+            height=WINDOW_HEIGHT
+        )
+        video_overlay = None
+        screen = virtual_env.screen
+    
     zone_detector = ZoneDetector()
     calibration_system = CalibrationSystem(motion_tracker)
-    ui_menu = UIMenu(virtual_env.screen)
+    ui_menu = UIMenu(screen)
+    
+    # Inizializza Reaper Connector (opzionale) - PRIMA di beatbox
+    reaper_connector = None
+    if REAPER_ENABLED:
+        try:
+            connection_type_map = {
+                'midi': ConnectionType.MIDI,
+                'osc': ConnectionType.OSC,
+                'both': ConnectionType.BOTH
+            }
+            conn_type = connection_type_map.get(REAPER_CONNECTION_TYPE, ConnectionType.MIDI)
+            
+            reaper_connector = ReaperConnector(
+                connection_type=conn_type,
+                midi_port=REAPER_MIDI_PORT,
+                osc_host=REAPER_OSC_HOST,
+                osc_port=REAPER_OSC_PORT
+            )
+            
+            if reaper_connector.enable():
+                print("✓ Reaper Connector abilitato")
+            else:
+                print("⚠️  Reaper Connector non disponibile (verifica MIDI/OSC)")
+                reaper_connector = None
+        except Exception as e:
+            print(f"[WARN] Errore inizializzazione Reaper: {e}")
+            reaper_connector = None
+    
+    # Inizializza beatbox detector se abilitato (DOPO reaper_connector)
+    beatbox_detector = None
+    if BEATBOX_MODE:
+        def beatbox_callback(drum_name, intensity):
+            """Callback quando rileva un suono beatbox"""
+            drum_machine.play_sound(drum_name, intensity)
+            if reaper_connector and reaper_connector.enabled:
+                reaper_connector.send_trigger(drum_name, intensity)
+            if video_overlay:
+                video_overlay.set_active_pad(drum_name, True, intensity)
+        
+        beatbox_detector = BeatboxDetector(callback=beatbox_callback)
+        beatbox_detector.start_recording()
+        print("[OK] Modalità Beatbox attivata")
     
     # Configura callback per il menu
     ui_menu.register_callback('toggle_metronome', lambda enabled: 
@@ -61,11 +127,18 @@ def main():
         print("Assicurati che la videocamera sia collegata e non utilizzata da altre applicazioni.")
         return
     
-    print("✓ Videocamera inizializzata")
-    print("✓ Drum Machine pronta")
-    print("✓ Ambiente virtuale pronto")
-    print("✓ Sistema di calibrazione pronto")
-    print("✓ Menu UI pronto")
+    print("[OK] Videocamera inizializzata")
+    print("[OK] Drum Machine pronta")
+    if USE_VIDEO_OVERLAY:
+        print("[OK] Video Overlay Mode attivo")
+    else:
+        print("[OK] Ambiente virtuale 3D pronto")
+    print("[OK] Sistema di calibrazione pronto")
+    print("[OK] Menu UI pronto")
+    if reaper_connector and reaper_connector.enabled:
+        print("[OK] Reaper Connector attivo")
+    if BEATBOX_MODE:
+        print("[OK] Modalità Beatbox attiva - Canta i suoni della batteria!")
     
     print("\n" + "=" * 60)
     print("CONTROLLI:")
@@ -90,7 +163,22 @@ def main():
     try:
         while running:
             # Controlla eventi
-            continue_running, key_pressed = virtual_env.check_events()
+            if virtual_env:
+                continue_running, key_pressed = virtual_env.check_events()
+            else:
+                # Gestione eventi per video overlay
+                continue_running = True
+                key_pressed = None
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        continue_running = False
+                        break
+                    elif event.type == pygame.KEYDOWN:
+                        key_pressed = event.key
+                        if event.key == pygame.K_ESCAPE:
+                            continue_running = False
+                            break
+            
             if not continue_running:
                 break
             
@@ -108,13 +196,27 @@ def main():
             # Aggiorna metronomo
             drum_machine.update_metronome()
             
-            # Ottieni frame dalla videocamera
-            frame = motion_tracker.get_frame()
-            if frame is None:
-                continue
+            # Ottieni frame dalla videocamera (solo se non in modalità beatbox)
+            frame = None
+            pose_data = None
             
-            # Rileva la posa
-            pose_data = motion_tracker.detect_pose(frame)
+            if not BEATBOX_MODE:
+                frame = motion_tracker.get_frame()
+                if frame is None:
+                    continue
+                
+                # Rileva la posa
+                pose_data = motion_tracker.detect_pose(frame)
+            elif USE_VIDEO_OVERLAY and video_overlay:
+                # In modalità beatbox, mostra solo video senza tracking
+                frame = motion_tracker.get_frame()
+                if frame is not None:
+                    video_overlay.clear()
+                    video_overlay.update_frame(frame)
+                    video_overlay.draw_all_pads()
+                    stats = beatbox_detector.get_statistics() if beatbox_detector else {}
+                    video_overlay.draw_info(current_fps, stats.get('total_detections', 0))
+                    pygame.display.flip()
             
             active_zones = set()
             
@@ -203,19 +305,46 @@ def main():
                     # Normalizza la velocità
                     velocity = min(1.0, max(0.3, velocity))
                     
+                    # Suona localmente
                     drum_machine.play_sound(zone_name, velocity)
+                    
+                    # Invia a Reaper se abilitato
+                    if reaper_connector and reaper_connector.enabled:
+                        reaper_connector.send_trigger(zone_name, velocity)
+                    
                     active_zones.add(zone_name)
                 
-                # Aggiorna l'ambiente virtuale
-                virtual_env.update(
-                    key_points=key_points, 
-                    active_zones=active_zones,
-                    fps=current_fps,
-                    show_info=not ui_menu.is_active()
-                )
+                # Aggiorna visualizzazione
+                if USE_VIDEO_OVERLAY and video_overlay:
+                    # Modalità video overlay
+                    video_overlay.clear()
+                    video_overlay.update_frame(frame)
+                    
+                    # Aggiorna pad attivi
+                    for zone_name in active_zones:
+                        video_overlay.set_active_pad(zone_name, True, 1.0)
+                    
+                    video_overlay.draw_all_pads(key_points)
+                    video_overlay.draw_info(current_fps, len(active_zones))
+                    pygame.display.flip()
+                elif virtual_env:
+                    # Modalità 3D tradizionale
+                    virtual_env.update(
+                        key_points=key_points, 
+                        active_zones=active_zones,
+                        fps=current_fps,
+                        show_info=not ui_menu.is_active()
+                    )
             else:
-                # Nessuna posa rilevata, mostra solo l'ambiente
-                virtual_env.update(fps=current_fps, show_info=not ui_menu.is_active())
+                # Nessuna posa rilevata
+                if USE_VIDEO_OVERLAY and video_overlay and frame is not None:
+                    video_overlay.clear()
+                    video_overlay.update_frame(frame)
+                    video_overlay.draw_all_pads()
+                    video_overlay.draw_info(current_fps, 0)
+                    pygame.display.flip()
+                elif virtual_env:
+                    virtual_env.update(fps=current_fps, show_info=not ui_menu.is_active())
             
             # Disegna il menu se attivo
             if ui_menu.is_active():
@@ -242,7 +371,14 @@ def main():
         print("\nChiusura applicazione...")
         motion_tracker.release()
         drum_machine.stop_all()
-        virtual_env.close()
+        if reaper_connector:
+            reaper_connector.close()
+        if beatbox_detector:
+            beatbox_detector.stop_recording()
+        if virtual_env:
+            virtual_env.close()
+        if video_overlay:
+            pygame.quit()
         print("Applicazione chiusa. Arrivederci!")
 
 if __name__ == "__main__":
