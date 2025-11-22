@@ -1,6 +1,9 @@
 """
 DrumMan - Virtual Drum Machine con Motion Tracking
 Entry point principale dell'applicazione - Versione Completa
+
+Copyright (c) 2024 Alessio Ballini
+Email: ballales1984@gmail.com
 """
 import sys
 import time

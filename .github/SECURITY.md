@@ -10,7 +10,7 @@
 
 Se scopri una vulnerabilità di sicurezza, **NON aprire una issue pubblica**. Invece:
 
-1. Invia una email a [your-email@example.com] con:
+1. Invia una email a ballales1984@gmail.com con:
    - Descrizione dettagliata della vulnerabilità
    - Passi per riprodurre
    - Impatto potenziale

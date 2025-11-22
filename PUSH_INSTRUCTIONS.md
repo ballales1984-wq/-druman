@@ -29,6 +29,8 @@ git remote add origin https://github.com/TUO_USERNAME/druman.git
 
 **Sostituisci `TUO_USERNAME` con il tuo username GitHub!**
 
+**Autore**: Alessio Ballini (ballales1984@gmail.com)
+
 ### 3. Push su GitHub
 
 ```bash
