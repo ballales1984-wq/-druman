@@ -13,17 +13,22 @@ import time
 import numpy as np
 from typing import Optional, Dict, List
 from dataclasses import dataclass
-from concurrent.queue import Queue
+from queue import Queue
 from multiprocessing import Process, Queue as MPQueue
 
 # Check availability
 FLUIDSYNTH_AVAILABLE = False
 try:
-    import pyfluidynth
+    import fluidsynth
 
     FLUIDSYNTH_AVAILABLE = True
-except ImportError:
-    print("[WARN] pyFluidSynth non disponibile")
+except (ImportError, FileNotFoundError):
+    try:
+        import pyfluidsynth
+
+        FLUIDSYNTH_AVAILABLE = True
+    except ImportError:
+        print("[WARN] pyFluidSynth non disponibile")
 
 
 SOUNDDEVICE_AVAILABLE = False
@@ -100,7 +105,9 @@ class FluidSynthEngine:
         try:
             print("[INFO] Inizializzazione FluidSynth...")
 
-            self.synth = pyfluidynth.Synth()
+            import fluidsynth
+
+            self.synth = fluidsynth.Synth()
             self.synth.start(sample_rate=self.config.sample_rate, threads=2)
 
             # Carica SoundFont
