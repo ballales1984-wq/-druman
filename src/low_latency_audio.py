@@ -14,7 +14,7 @@ import numpy as np
 from typing import Optional, Dict, List, Callable
 from dataclasses import dataclass
 from collections import deque
-from concurrent.queue import Queue
+from queue import Queue
 
 # Check availability
 RTMIXER_AVAILABLE = False
