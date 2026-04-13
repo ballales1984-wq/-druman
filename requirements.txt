@@ -25,3 +25,14 @@ python-osc>=1.8.0
 # Sound Library (Optional)
 soundfile>=0.12.0
 
+# Drum Generator (Optional - for auto drum part generation)
+librosa>=0.10.0
+mido>=1.2.10
+
+# Stem separation (Demucs)
+demucs>=4.0.0
+torch>=2.0.0
+
+# Audio processing
+scikit-learn>=1.3.0
+
