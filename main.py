@@ -57,6 +57,24 @@ from src.zone_detector import ZoneDetector
 from src.calibration import CalibrationSystem
 from src.ui_menu import UIMenu
 from src.reaper_connector import ReaperConnector, ConnectionType
+
+# Audio engine - try FluidSynth first, fallback to drum_machine
+USE_FLUIDSYNTH = True
+audio_engine = None
+try:
+    from src.fluidsynth_engine import FluidSynthEngine
+
+    audio_engine = FluidSynthEngine()
+    if audio_engine.initialize():
+        print("[OK] FluidSynth attivo")
+    else:
+        audio_engine = None
+except ImportError:
+    pass
+
+# Fallback to drum_machine if no FluidSynth
+if audio_engine is None:
+    print("[INFO] Uso DrumMachine standard")
 from src.config import (
     CAMERA_INDEX,
     CAMERA_WIDTH,
@@ -153,6 +171,10 @@ def main():
 
         def beatbox_callback(drum_name, intensity):
             """Callback quando rileva un suono beatbox"""
+            # FluidSynth if available
+            if audio_engine:
+                audio_engine.play(drum_name, intensity)
+            # Fallback drum_machine
             drum_machine.play_sound(drum_name, intensity)
             if reaper_connector and reaper_connector.enabled:
                 reaper_connector.send_trigger(drum_name, intensity)
@@ -409,8 +431,11 @@ def main():
                     # Normalizza la velocità
                     velocity = min(1.0, max(0.3, velocity))
 
-                    # Suona localmente
-                    drum_machine.play_sound(zone_name, velocity)
+                    # Suona localmente (FluidSynth if available, else drum_machine)
+                    if audio_engine:
+                        audio_engine.play(zone_name, velocity)
+                    else:
+                        drum_machine.play_sound(zone_name, velocity)
 
                     # Invia a Reaper se abilitato
                     if reaper_connector and reaper_connector.enabled:
