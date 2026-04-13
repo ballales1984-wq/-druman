@@ -66,6 +66,12 @@ class FluidSynthEngine:
     Usa SoundFont per suoni realistici.
     """
 
+    DEFAULT_SOUNDFONTS = [
+        # Free drum kits from internet
+        "https://musicalartifacts.com/artefacts/3/Training-1.sf2",
+        "https://musicalartifacts.com/artefacts/6/Training-2.sf2",
+    ]
+
     def __init__(self, config: Optional[FluidSynthConfig] = None):
         self.config = config or FluidSynthConfig()
         self.synth = None
@@ -117,6 +123,42 @@ class FluidSynthEngine:
         except Exception as e:
             print(f"[ERR] FluidSynth: {e}")
             return self._init_fallback()
+
+    def download_soundfont(
+        self, url: str = None, target_dir: str = "sounds"
+    ) -> Optional[str]:
+        """
+        Scarica SoundFont automaticamente.
+
+        Args:
+            url: URL del SoundFont (se None, usa default)
+            target_dir: Directory dove salvare
+
+        Returns:
+            Percorso del file scaricato o None
+        """
+        import urllib.request
+
+        url = url or self.DEFAULT_SOUNDFONTS[0]
+
+        os.makedirs(target_dir, exist_ok=True)
+        filename = url.split("/")[-1]
+        target_path = os.path.join(target_dir, filename)
+
+        if os.path.exists(target_path):
+            print(f"[INFO] SoundFont già presente: {target_path}")
+            return target_path
+
+        print(f"[INFO] Scaricamento SoundFont...")
+        print(f"       {url}")
+
+        try:
+            urllib.request.urlretrieve(url, target_path)
+            print(f"[OK] SoundFont scaricato: {target_path}")
+            return target_path
+        except Exception as e:
+            print(f"[ERR] Download SoundFont: {e}")
+            return None
 
     def _init_fallback(self) -> bool:
         """Fallback con sounddevice"""

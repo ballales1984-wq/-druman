@@ -7,6 +7,7 @@ Email: ballales1984@gmail.com
 """
 
 import sys
+import os
 import time
 import numpy as np
 
@@ -65,6 +66,17 @@ try:
     from src.fluidsynth_engine import FluidSynthEngine
 
     audio_engine = FluidSynthEngine()
+
+    # Try to download SoundFont if not present
+    soundfont_path = "sounds/drums.sf2"
+    if not os.path.exists(soundfont_path):
+        print("[INFO] Cerco SoundFont...")
+        soundfont_path = audio_engine.download_soundfont() or soundfont_path
+
+    audio_engine.config.soundfont_path = (
+        soundfont_path if os.path.exists(soundfont_path) else None
+    )
+
     if audio_engine.initialize():
         print("[OK] FluidSynth attivo")
     else:
