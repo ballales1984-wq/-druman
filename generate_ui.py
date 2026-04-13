@@ -261,4 +261,34 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="DrumMan AI Generator")
+    parser.add_argument("--audio", "-a", help="Audio file path")
+    parser.add_argument(
+        "--style",
+        "-s",
+        default="rock",
+        help="Style: rock, pop, hiphop, electronic, jazz, metal, rnb",
+    )
+    parser.add_argument("--bars", "-b", type=int, default=8, help="Number of bars")
+    parser.add_argument(
+        "--complexity",
+        "-c",
+        default="medium",
+        help="Complexity: simple, medium, complex",
+    )
+    parser.add_argument(
+        "--example", "-e", action="store_true", help="Run example and exit"
+    )
+    args = parser.parse_args()
+
+    if args.example or args.audio:
+        # Run in batch mode
+        if args.audio:
+            generate_from_audio(args.audio, args.style, args.bars, args.complexity)
+        else:
+            generate_manual(args.style, args.bars, args.complexity)
+    else:
+        # Interactive mode
+        main()
