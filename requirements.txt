@@ -7,7 +7,7 @@ mediapipe>=0.10.0
 pyaudio>=0.2.13
 pygame>=2.5.0
 sounddevice>=0.4.6
-scipy>=1.11.0
+scipy>=1.17.1
 
 # 3D visualization
 pygame>=2.5.0
