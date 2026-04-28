@@ -12,7 +12,7 @@ scipy>=1.11.0
 # 3D visualization
 pygame>=2.5.0
 pyopengl>=3.1.6
-pyopengl-accelerate>=3.1.6
+pyopengl-accelerate>=3.1.10
 
 # Utilities
 python-dotenv>=1.0.0
