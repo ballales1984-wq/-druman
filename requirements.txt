@@ -34,5 +34,5 @@ demucs>=4.0.0
 torch>=2.0.0
 
 # Audio processing
-scikit-learn>=1.3.0
+scikit-learn>=1.8.0
 
