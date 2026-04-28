@@ -30,7 +30,7 @@ librosa>=0.10.0
 mido>=1.2.10
 
 # Stem separation (Demucs)
-demucs>=4.0.0
+demucs>=4.0.1
 torch>=2.0.0
 
 # Audio processing
