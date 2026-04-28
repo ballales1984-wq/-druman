@@ -19,7 +19,7 @@ python-dotenv>=1.0.0
 
 # Reaper Integration (Optional)
 mido>=1.2.10
-python-rtmidi>=1.5.0
+python-rtmidi>=1.5.8
 python-osc>=1.8.0
 
 # Sound Library (Optional)
