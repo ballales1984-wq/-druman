@@ -1,7 +1,7 @@
 # Core dependencies
 numpy>=1.24.0
 opencv-python>=4.8.0
-mediapipe>=0.10.0
+mediapipe>=0.10.35
 
 # Audio processing
 pyaudio>=0.2.13
